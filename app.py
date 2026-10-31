@@ -12,12 +12,15 @@ st.set_page_config(
 # الاتصال بالذكاء الاصطناعي عبر الإنترنت
 def ask_ai(prompt):
     try:
-        api_key = st.secrets.get("GROQ_API_KEY", "")
+        try:
+            api_key = st.secrets["GROQ_API_KEY"]
+        except Exception:
+            api_key = ""
 
         if not api_key:
             return (
                 "لم تتم إضافة مفتاح الذكاء الاصطناعي بعد. "
-                "سنضيفه من إعدادات Streamlit."
+                "راجعي إعدادات Secrets في Streamlit."
             )
 
         response = requests.post(
@@ -27,7 +30,7 @@ def ask_ai(prompt):
                 "Content-Type": "application/json"
             },
             json={
-                "model": "llama-3.1-8b-instant",
+                "model": "openai/gpt-oss-20b",
                 "messages": [
                     {
                         "role": "system",
@@ -44,18 +47,24 @@ def ask_ai(prompt):
                     }
                 ],
                 "temperature": 0.3,
-                "max_completion_tokens": 1000
+                "max_completion_tokens": 1500
             },
             timeout=120
         )
 
         if response.status_code == 401:
-            return "مفتاح API غير صحيح. نحتاج مراجعة المفتاح."
+            return "مفتاح API غير صحيح. راجعي المفتاح في Streamlit Secrets."
 
         if response.status_code == 429:
             return (
                 "وصلنا إلى حد الاستخدام المجاني مؤقتاً. "
                 "حاولي مرة أخرى لاحقاً."
+            )
+
+        if response.status_code == 404:
+            return (
+                "تعذر العثور على النموذج المطلوب. "
+                "راجعي اسم النموذج في إعدادات التطبيق."
             )
 
         response.raise_for_status()
