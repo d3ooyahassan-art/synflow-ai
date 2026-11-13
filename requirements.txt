@@ -1,0 +1,7 @@
+streamlit
+requests
+pypdf
+supabase
+Pillow
+arabic-reshaper
+python-bidi
